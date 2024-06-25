@@ -1,0 +1,84 @@
+import random
+from kivy.app import App
+from kivy.uix.boxlayout import BoxLayout
+from kivy.uix.image import Image
+from kivy.uix.button import Button
+from kivy.uix.label import Label
+from kivy.core.audio import SoundLoader
+
+class TestApp(App):
+    def __init__(self, **kwargs):
+        super(TestApp, self).__init__(**kwargs)
+        self.questions = [
+            {
+                'question': 'Какое изображение показывает Академгородок?',
+                'image': 'akademgorodok.jpg',
+                'options': ['option1', 'option2', 'option3', 'option4'],
+                'correct_answer': 0
+            },
+            {
+                'question': 'Какое изображение показывает Зоопарк?',
+                'image': 'zoopark.jpg',
+                'options': ['option1', 'option2', 'option3', 'option4'],
+                'correct_answer': 1
+            },
+            # Добавьте остальные вопросы с изображениями и вариантами ответов
+        ]
+        self.current_question = 0
+        self.score = 0
+        self.sound = SoundLoader.load('sound.wav')
+
+    def build(self):
+        layout = BoxLayout(orientation='vertical')
+        self.question_label = Label(text='', font_size=20)
+        self.image = Image(source='', size_hint=(1, 0.7))
+        self.option_buttons = []
+        for i in range(4):
+            button = Button(text='', font_size=16, size_hint=(1, 0.1))
+            button.bind(on_press=self.check_answer)
+            self.option_buttons.append(button)
+        self.next_button = Button(text='Next', font_size=16, size_hint=(1, 0.1))
+        self.next_button.bind(on_press=self.next_question)
+        layout.add_widget(self.question_label)
+        layout.add_widget(self.image)
+        for button in self.option_buttons:
+            layout.add_widget(button)
+        layout.add_widget(self.next_button)
+        self.show_question()
+        return layout
+
+    def show_question(self):
+        question = self.questions[self.current_question]
+        self.question_label.text = question['question']
+        self.image.source = question['image']
+        random.shuffle(question['options'])
+        for i in range(4):
+            self.option_buttons[i].text = question['options'][i]
+
+    def check_answer(self, instance):
+        question = self.questions[self.current_question]
+        if question['options'].index(instance.text) == question['correct_answer']:
+            self.score += 1
+            # Воспроизвести звук правильного ответа (если есть)
+            if self.sound:
+                self.sound.play()
+        else:
+            # Воспроизвести звук неправильного ответа (если есть)
+            pass
+
+    def next_question(self, instance):
+        if self.current_question < len(self.questions) - 1:
+            self.current_question += 1
+            self.show_question()
+        else:
+            # Вывести результаты теста
+            layout = BoxLayout(orientation='vertical')
+            score_label = Label(text=f'Score: {self.score}/{len(self.questions)}', font_size=20)
+            result_image = Image(source='result_image.jpg', size_hint=(1, 0.7))
+            layout.add_widget(score_label)
+            layout.add_widget(result_image)
+            self.root.clear_widgets()
+            self.root.add_widget(layout)
+
+if __name__ == '__main__':
+    TestApp().run()
